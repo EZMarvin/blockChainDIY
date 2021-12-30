@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/EZMarvin/go-blockchain/blockchain"
+	"github.com/EZMarvin/go-blockchain/wallet"
 	"log"
 	"os"
 	"runtime"
@@ -22,6 +23,8 @@ func (cli *CommandLine) printUsage() {
 	fmt.Println(" send - from From -to To -amount AMOUNT - Send amount")
 	//fmt.Println(" add -block BLOCK_DATA - add a block to the chain")
 	//fmt.Println(" print - Prints the blocks in the chain")
+	fmt.Println("createwallet - Create a new Wallet")
+	fmt.Println("listaddresses = Lists the addresses in out wallet file")
 }
 
 func (cli *CommandLine) validateArgs(){
@@ -85,6 +88,22 @@ func (cli *CommandLine) send(from, to string, amount int){
 	chain.AddBlock([]*blockchain.Transaction{tx})
 	fmt.Println("Success send")
 }
+func (cli *CommandLine) createWallet(){
+	wallets, _ := wallet.CreateWallets()
+	address := wallets.AddWallet()
+	wallets.SaveFile()
+
+	fmt.Printf("New address is %s\n", address)
+}
+
+func (cli *CommandLine) listAddresses(){
+	wallets, _ := wallet.CreateWallets()
+	addresses := wallets.GetAllAddresses()
+
+	for _, address := range addresses {
+		fmt.Println(address)
+	}
+}
 
 func (cli *CommandLine) Run() {
 	cli.validateArgs()
@@ -93,12 +112,15 @@ func (cli *CommandLine) Run() {
 	createBlockchainCmd := flag.NewFlagSet("createblockchain", flag.ExitOnError)
 	sendCmd := flag.NewFlagSet("send", flag.ExitOnError)
 	printChainCmd := flag.NewFlagSet("printchain", flag.ExitOnError)
+	createWalletCmd := flag.NewFlagSet("createwallet", flag.ExitOnError)
+	listaddressCmd := flag.NewFlagSet("listaddresses", flag.ExitOnError)
 
 	getBalanceAddress := getBalanceCmd.String("address", "", "The address to get balance for")
 	createBlockchainAddress := createBlockchainCmd.String("address", "", "The address to send genesis block reward to")
 	sendFrom := sendCmd.String("from", "", "Source wallet address")
 	sendTo := sendCmd.String("to", "", "Destination wallet address")
 	sendAmount := sendCmd.Int("amount", 0, "Amount to send")
+
 
 	/*
 		addBlockCmd := flag.NewFlagSet("add", flag.ExitOnError)
@@ -135,7 +157,16 @@ func (cli *CommandLine) Run() {
 		if err != nil {
 			log.Panic(err)
 		}
-
+	case "createwallet":
+		err := createWalletCmd.Parse(os.Args[2:])
+		if err != nil {
+			log.Panic(err)
+		}
+	case "listaddresses":
+		err := listaddressCmd.Parse(os.Args[2:])
+		if err != nil {
+			log.Panic(err)
+		}
 	default:
 		cli.printUsage()
 		runtime.Goexit()
@@ -168,6 +199,14 @@ func (cli *CommandLine) Run() {
 		}
 
 		cli.send(*sendFrom, *sendTo, *sendAmount)
+	}
+
+	if createWalletCmd.Parsed() {
+		cli.createWallet()
+	}
+
+	if listaddressCmd.Parsed() {
+		cli.listAddresses()
 	}
 	/*
 		if addBlockCmd.Parsed() {

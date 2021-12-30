@@ -2,6 +2,7 @@ package blockchain
 
 import (
 	"bytes"
+	"crypto/ecdsa"
 	"crypto/sha256"
 	"encoding/gob"
 	"encoding/hex"
@@ -78,3 +79,43 @@ func (tx *Transaction) IsCoinbase() bool {
 	return len(tx.Inputs) == 1 && len(tx.Inputs[0].ID) == 0 && tx.Inputs[0].Out == -1
 }
 
+func (tx Transaction) Serialize() []byte {
+	var encoded bytes.Buffer
+
+	enc := gob.NewEncoder(&encoded)
+	err := enc.Encode(tx)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return encoded.Bytes()
+}
+
+func (tx *Transaction) Hash() []byte {
+	var hash [32]byte
+
+	txCopy := *tx
+	txCopy.ID = []byte{}
+
+	hash = sha256.Sum256(txCopy.Serialize())
+
+	return hash[:]
+}
+
+func (tx *Transaction) Sign (privateKey ecdsa.PrivateKey, prevTxs map[string]Transaction) {
+	if tx.IsCoinbase(){
+		return
+	}
+
+	for _, in := range tx.Inputs {
+		if prevTxs[hex.EncodeToString(in.ID)].ID == nil {
+			log.Panic("Error: Previous transaction does not exist")
+		}
+	}
+
+	txCopy := tx.TrimmedCopy()
+
+	for inId, in := range txCopy.Inputs {
+		pre
+	}
+}

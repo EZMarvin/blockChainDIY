@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/EZMarvin/go-blockchain/cli"
 	"os"
-
 )
 
 
@@ -18,6 +17,9 @@ func main() {
 	cli := CommandLine{chain}
 	*/
 	cli.Run()
+
+	//w := wallet.MakeWallet()
+	//w.Address()
 }
 
 
